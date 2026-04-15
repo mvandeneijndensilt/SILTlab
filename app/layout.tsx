@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 
@@ -6,6 +6,8 @@ const navItems = [
   { href: "/dashboard", label: "Planning" },
   { href: "/employees", label: "Medewerkers" },
   { href: "/projects", label: "Projecten" },
+  { href: "/proeven", label: "Proeven" },
+  { href: "/volumiek", label: "Uitvoering" },
 ];
 
 export const metadata: Metadata = {
@@ -29,7 +31,7 @@ export default function RootLayout({
                   SILT Labplanning
                 </span>
                 <span className="text-sm text-slate-500">
-                  Dagelijkse sleepplanning
+                  Dagelijkse sleepplanning en uitvoering
                 </span>
               </Link>
 
@@ -55,3 +57,4 @@ export default function RootLayout({
     </html>
   );
 }
+

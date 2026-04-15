@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   DndContext,
@@ -85,6 +85,10 @@ function compareBacklogGroups(a: BacklogGroup, b: BacklogGroup) {
   return a.sourceTaskName.localeCompare(b.sourceTaskName, "nl-NL");
 }
 
+function formatTaskCount(count: number) {
+  return count === 1 ? "1 onderdeel" : `${count} onderdelen`;
+}
+
 function groupBacklogTasks(tasks: Task[]) {
   const groups = new Map<string, BacklogGroup>();
 
@@ -135,6 +139,7 @@ function BacklogDropZone({ tasks }: { tasks: Task[] }) {
               (sum, task) => sum + task.durationHours,
               0,
             );
+            const hasSingleTask = group.tasks.length === 1;
 
             return (
               <article
@@ -142,16 +147,18 @@ function BacklogDropZone({ tasks }: { tasks: Task[] }) {
                 className="rounded-[24px] border border-white/80 bg-white/85 p-4 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Taaknaam
+                      Taak uit import
                     </p>
-                    <h4 className="mt-2 font-display text-xl font-semibold text-slate-900">
+                    <h4 className="mt-2 break-words font-display text-xl font-semibold text-slate-900">
                       {group.sourceTaskName}
                     </h4>
-                    <p className="mt-2 text-sm text-slate-600">
-                      Opdracht: {group.projectName}
-                    </p>
+                    {group.projectName !== group.sourceTaskName ? (
+                      <p className="mt-2 text-sm text-slate-600">
+                        Opdracht: {group.projectName}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -166,7 +173,7 @@ function BacklogDropZone({ tasks }: { tasks: Task[] }) {
                       </span>
                     ) : null}
                     <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
-                      {group.tasks.length} onderdelen
+                      {formatTaskCount(group.tasks.length)}
                     </span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                       {totalGroupHours.toFixed(1)}u
@@ -174,15 +181,22 @@ function BacklogDropZone({ tasks }: { tasks: Task[] }) {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {group.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      showContext={false}
-                    />
-                  ))}
-                </div>
+                {hasSingleTask ? (
+                  <div className="mt-4">
+                    <TaskCard task={group.tasks[0]} showContext={false} />
+                  </div>
+                ) : (
+                  <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                    {group.tasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        showContext={false}
+                        className="h-full"
+                      />
+                    ))}
+                  </div>
+                )}
               </article>
             );
           })
@@ -345,7 +359,7 @@ export default function PlannerBoard({
                     Uren
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-white">
-                    {scheduledHours.toFixed(1)}h
+                    {scheduledHours.toFixed(1)}u
                   </p>
                 </div>
               </div>
@@ -368,10 +382,10 @@ export default function PlannerBoard({
               </div>
 
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                De backlog is nu gegroepeerd per taak/opdracht. Sleep vanuit de
-                juiste groep een proef naar de dag-, week- of maandweergave van
-                een medewerker. Sleep hem terug naar hier om de planning te
-                wissen.
+                De backlog is nu gegroepeerd op de taak uit de import. Bij een
+                enkele proef krijgt die kaart de volle breedte, zodat alles
+                leesbaar blijft binnen de kaart. Sleep daarna de juiste proef
+                naar de dag-, week- of maandweergave van een medewerker.
               </p>
 
               <BacklogDropZone tasks={backlogTasks} />

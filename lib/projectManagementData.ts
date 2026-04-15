@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import {
   labTestCatalog as mockCatalog,
@@ -29,6 +29,7 @@ interface DatabaseProjectRow {
   deadline: string | null;
   source_description: string | null;
   project_notes: string | null;
+  raw_payload: Record<string, unknown> | null;
 }
 
 interface DatabaseProjectTestRow {
@@ -66,6 +67,15 @@ function toNumber(value: number | string | null | undefined, fallback: number) {
   return Number.isNaN(parsedValue) ? fallback : parsedValue;
 }
 
+function toNullableNumber(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isNaN(parsedValue) ? null : parsedValue;
+}
+
 function toDateKey(value: string | null | undefined) {
   if (!value) {
     return null;
@@ -78,6 +88,16 @@ function normalizeProjectPriority(
   value: ProjectPlanningPriority | string | null | undefined,
 ): ProjectPlanningPriority {
   return value === "Spoed" ? "Spoed" : "Standaard";
+}
+
+function readEstimatedHoursFromRawPayload(
+  rawPayload: Record<string, unknown> | null | undefined,
+) {
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return null;
+  }
+
+  return toNullableNumber(rawPayload.Gepland as number | string | null | undefined);
 }
 
 function mapCatalogRow(row: DatabaseCatalogRow): LabTestCatalogItem {
@@ -146,6 +166,7 @@ function withDerivedProjectFields(
     deadline: toDateKey(row.deadline),
     sourceDescription: row.source_description,
     projectNotes: row.project_notes,
+    sourceEstimatedHours: readEstimatedHoursFromRawPayload(row.raw_payload),
     taskCount: tests.length,
     queuedHours: tests.reduce(
       (total, test) => total + test.totalDurationHours,
@@ -189,7 +210,7 @@ export async function getProjectManagementData(): Promise<ProjectManagementData>
       supabase
         .from("lab_projects")
         .select(
-          "id, source_nummer, title, company_name, offer_assignment, status, planning_priority, deadline, source_description, project_notes",
+          "id, source_nummer, title, company_name, offer_assignment, status, planning_priority, deadline, source_description, project_notes, raw_payload",
         )
         .order("updated_at", { ascending: false }),
       supabase

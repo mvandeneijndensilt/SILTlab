@@ -1,4 +1,4 @@
-export type PlanningView = "day" | "week" | "month";
+﻿export type PlanningView = "day" | "week" | "month";
 
 export interface PlannerDay {
   id: string;
@@ -87,6 +87,7 @@ export interface LabProject {
   deadline?: string | null;
   sourceDescription?: string | null;
   projectNotes?: string | null;
+  sourceEstimatedHours?: number | null;
   taskCount: number;
   queuedHours: number;
   tests?: LabProjectTest[];

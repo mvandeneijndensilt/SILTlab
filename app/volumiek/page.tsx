@@ -1,6 +1,7 @@
-﻿import ProjectPriorityForm from "@/components/ProjectPriorityForm";
-import ProjectTestsManager from "@/components/ProjectTestsManager";
-import { getProjectManagementData } from "@/lib/projectManagementData";
+import VolumiekProjectForm from "@/components/VolumiekProjectForm";
+import VolumiekSampleRequestsForm from "@/components/VolumiekSampleRequestsForm";
+import VolumiekExportsForm from "@/components/VolumiekExportsForm";
+import { getVolumiekManagementData } from "@/lib/volumiekManagementData";
 
 export const dynamic = "force-dynamic";
 
@@ -24,46 +25,50 @@ function formatHours(value: number | null | undefined) {
   return `${value.toFixed(1)}u`;
 }
 
-function formatTestCount(value: number) {
-  return value === 1 ? "1 proef" : `${value} proeven`;
+function formatUpdatedAt(value: string | null | undefined) {
+  if (!value) {
+    return "Nog niet opgeslagen";
+  }
+
+  return new Intl.DateTimeFormat("nl-NL", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-export default async function ProjectsPage() {
-  const projectData = await getProjectManagementData();
-  const totalQueuedHours = projectData.projects.reduce(
-    (total, project) => total + project.queuedHours,
+export default async function VolumiekPage() {
+  const volumiekData = await getVolumiekManagementData();
+  const totalRequested = volumiekData.projects.reduce(
+    (total, project) => total + project.requestedQuantity,
     0,
   );
-  const totalImportedHours = projectData.projects.reduce(
-    (total, project) => total + (project.sourceEstimatedHours ?? 0),
+  const totalFilled = volumiekData.projects.reduce(
+    (total, project) => total + project.filledRowCount,
     0,
   );
-  const urgentProjects = projectData.projects.filter(
+  const urgentProjects = volumiekData.projects.filter(
     (project) => project.planningPriority === "Spoed",
   ).length;
-  const projectsWithDeadline = projectData.projects.filter(
-    (project) => project.deadline,
+  const completedProjects = volumiekData.projects.filter(
+    (project) => project.filledRowCount >= Math.max(1, project.requestedQuantity),
   ).length;
-  const projectsWithTests = projectData.projects.filter(
-    (project) => (project.tests?.length ?? 0) > 0,
-  ).length;
-  const isEditable = projectData.source === "supabase";
+  const isEditable = volumiekData.source === "supabase";
 
   return (
     <section className="space-y-8">
       <div className="max-w-4xl">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-          Projecten
+          Uitvoering
         </p>
         <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-          Projecten, proeven en planning
+          Uitvoering: Volumiek gewicht
         </h1>
         <p className="mt-4 text-lg leading-8 text-slate-600">
-          De projectlijst is nu inklapbaar, zodat je sneller overzicht houdt.
-          Open een project als je proeven, prioriteit, deadline of opmerkingen
-          wilt aanpassen. Daarnaast zie je per project zowel de geschatte uren
-          uit de import als de berekende laburen op basis van de ingestelde
-          proeven.
+          Hier beheer je de monsterselectie (boring/monster) en de volumiek-invoer per project.
+          De gegevens zijn bedoeld om rechtstreeks uit te wisselen met SILT Suite, zonder FTP.
         </p>
       </div>
 
@@ -73,61 +78,61 @@ export default async function ProjectsPage() {
             Projecten
           </p>
           <h2 className="mt-3 font-display text-3xl font-semibold">
-            {projectData.projects.length}
+            {volumiekData.projects.length}
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            Totale instroom van labprojecten in de planner.
+            Projecten met een volumiek-vraag of al opgeslagen volumiek-data.
           </p>
         </article>
 
         <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Spoed
+            Gevraagd
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
+            {totalRequested}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Totaal aantal gevraagde monsters (of VGW-aantal als monsters nog niet zijn gespecificeerd).
+          </p>
+        </article>
+
+        <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+            Ingevuld
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
+            {totalFilled}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            {completedProjects} projecten hebben al voldoende volumiek-invoer.
+          </p>
+        </article>
+
+        <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+            Spoedprojecten
           </p>
           <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
             {urgentProjects}
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            {projectsWithDeadline} projecten hebben al een deadline.
-          </p>
-        </article>
-
-        <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Geschat uit import
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
-            {formatHours(totalImportedHours)}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
-            Uren die rechtstreeks uit de bronexport zijn meegekomen.
-          </p>
-        </article>
-
-        <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Geschat labwerk
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
-            {formatHours(totalQueuedHours)}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
-            {projectsWithTests} projecten hebben al afzonderlijke proefregels.
+            Deze kaart helpt om urgente projecten eerst af te ronden.
           </p>
         </article>
       </div>
 
-      {projectData.warning ? (
+      {volumiekData.warning ? (
         <p className="max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          {projectData.warning}
+          {volumiekData.warning}
         </p>
       ) : null}
 
-      {projectData.projects.length > 0 ? (
+      {volumiekData.projects.length > 0 ? (
         <div className="space-y-4">
-          {projectData.projects.map((project) => (
+          {volumiekData.projects.map((project) => (
             <details
-              key={project.id}
+              key={project.projectNummer}
               className={`group overflow-hidden rounded-[28px] border shadow-[0_24px_60px_-32px_rgba(15,31,45,0.35)] backdrop-blur-sm ${
                 project.planningPriority === "Spoed"
                   ? "border-rose-200 bg-rose-50/80"
@@ -138,9 +143,7 @@ export default async function ProjectsPage() {
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      {project.sourceNummer
-                        ? `Labopdracht ${project.sourceNummer}`
-                        : "Labproject"}
+                      Project {project.projectNummer}
                     </p>
                     <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900">
                       {project.title}
@@ -151,9 +154,9 @@ export default async function ProjectsPage() {
                           Bedrijf: {project.companyName}
                         </span>
                       ) : null}
-                      {project.offerAssignment ? (
+                      {project.deadline ? (
                         <span className="rounded-full bg-white/80 px-3 py-1 shadow-sm">
-                          Project: {project.offerAssignment}
+                          Deadline: {formatDeadline(project.deadline)}
                         </span>
                       ) : null}
                     </div>
@@ -170,18 +173,20 @@ export default async function ProjectsPage() {
                       >
                         {project.planningPriority}
                       </span>
-                      {project.status ? (
-                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                          {project.status}
-                        </span>
-                      ) : null}
+                      <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
+                        {project.filledRowCount >= Math.max(1, project.requestedQuantity)
+                          ? "Gereed"
+                          : project.filledRowCount > 0
+                            ? "Bezig"
+                            : "Nog leeg"}
+                      </span>
                     </div>
 
                     <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
                       <span className="text-base leading-none transition group-open:rotate-45">
                         +
                       </span>
-                      <span>Open details</span>
+                      <span>Open project</span>
                     </div>
                   </div>
                 </div>
@@ -189,65 +194,91 @@ export default async function ProjectsPage() {
                 <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-2xl bg-white/80 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Proeven
+                      Monsters
                     </p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">
-                      {formatTestCount(project.taskCount)}
+                      {project.sampleRequests.length > 0
+                        ? `${project.sampleRequests.length} geselecteerd`
+                        : "Nog niet gespecificeerd"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Gevraagd totaal: {project.requestedQuantity}
                     </p>
                   </div>
+
                   <div className="rounded-2xl bg-white/80 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Geschat import
+                      Ingevuld
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      {project.filledRowCount} van {Math.max(1, project.requestedQuantity)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/80 px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                      Geschat uit import
                     </p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">
                       {formatHours(project.sourceEstimatedHours)}
                     </p>
                   </div>
+
                   <div className="rounded-2xl bg-white/80 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Geschat labwerk
+                      Laatste update
                     </p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">
-                      {formatHours(project.queuedHours)}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-white/80 px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Deadline
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">
-                      {formatDeadline(project.deadline)}
+                      {formatUpdatedAt(project.updatedAt)}
                     </p>
                   </div>
                 </div>
               </summary>
 
-              <div className="border-t border-slate-200/80 px-6 pb-6 pt-5">
-                {project.projectNotes ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      Opmerkingen
-                    </p>
-                    <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-6 text-slate-700">
-                      {project.projectNotes}
-                    </pre>
-                  </div>
-                ) : null}
-
-                <ProjectTestsManager
-                  project={project}
-                  catalog={projectData.catalog}
+              <div className="border-t border-slate-200/80 px-6 pb-6 pt-6 space-y-6">
+                <VolumiekSampleRequestsForm
+                  projectNummer={project.projectNummer}
+                  projectId={project.projectId}
+                  title={project.title}
+                  requests={project.sampleRequests}
                   editable={isEditable}
                 />
-                <ProjectPriorityForm project={project} editable={isEditable} />
+
+                <VolumiekExportsForm
+                  projectNummer={project.projectNummer}
+                  projectId={project.projectId}
+                  title={project.title}
+                  exports={project.exports}
+                  editable={isEditable}
+                />
+
+                <details className="group overflow-hidden rounded-[24px] border border-slate-200 bg-white/70 shadow-sm">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                        Uitvoering
+                      </p>
+                      <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                        Invulvelden (volumiek)
+                      </h3>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                      {project.filledRowCount} / {Math.max(1, project.requestedQuantity)}
+                    </span>
+                  </summary>
+
+                  <div className="border-t border-slate-200/80 px-5 py-6">
+                    <VolumiekProjectForm project={project} editable={isEditable} />
+                  </div>
+                </details>
               </div>
             </details>
           ))}
         </div>
       ) : (
         <article className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 p-8 text-center text-slate-500 shadow-[0_24px_60px_-32px_rgba(15,31,45,0.25)]">
-          Er zijn nog geen projecten om te beheren. Importeer eerst een
-          labexport via het dashboard.
+          Er zijn nog geen volumiek-projecten gevonden. Zodra een project een `VGW`-proef krijgt,
+          verschijnt het hier automatisch.
         </article>
       )}
     </section>

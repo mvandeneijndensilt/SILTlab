@@ -16,6 +16,7 @@ Een Next.js App Router planner voor labwerk met sleepbare taakblokken, dag/week/
 - `/dashboard`
 - `/employees`
 - `/projects`
+- `/volumiek`
 
 ## Lokaal starten
 
@@ -33,4 +34,5 @@ Open daarna `http://localhost:3000`.
 - De app leest uit Supabase zodra `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_ANON_KEY` zijn gezet.
 - Voor uploads en updates vanuit de webapp is ook `SUPABASE_SERVICE_ROLE_KEY` nodig in `.env.local`.
 - Zolang Supabase nog niet klaar staat, valt de app automatisch terug op mockdata.
-- De SQL-bestanden staan in [supabase/schema.sql](supabase/schema.sql), [supabase/seed.sql](supabase/seed.sql) en [supabase/import_lab_rows.sql](supabase/import_lab_rows.sql).
+- De SQL-bestanden staan in [supabase/schema.sql](supabase/schema.sql), [supabase/seed.sql](supabase/seed.sql), [supabase/import_lab_rows.sql](supabase/import_lab_rows.sql) en [supabase/lab_tooling_bootstrap.sql](supabase/lab_tooling_bootstrap.sql).
+- Voor de nieuwe volumiek-uitwisseling tussen webapp en SILT Suite run je eenmalig `supabase/lab_tooling_bootstrap.sql` in Supabase.

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useDroppable } from "@dnd-kit/core";
 import { useState } from "react";
@@ -538,8 +538,9 @@ export default function EmployeeColumn({
                               <TaskCard
                                 task={task}
                                 compact
+                                showContext={false}
                                 timeLabel={placement.timeLabel}
-                                className="absolute top-0 h-full overflow-hidden"
+                                className="absolute top-0 h-full min-w-0 overflow-hidden"
                                 style={{
                                   left: `${placement.leftPercent}%`,
                                   width: `${placement.widthPercent}%`,
@@ -626,3 +627,4 @@ export default function EmployeeColumn({
     </article>
   );
 }
+

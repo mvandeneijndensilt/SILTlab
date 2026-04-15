@@ -134,3 +134,13 @@ aangemaakt.
 Bij generieke regels zonder `LABSPEC:` wordt een groot bron-aantal zoals `1829`
 niet meer als planduur opgeslagen. De importer zet dan bewust een conservatieve
 planduur van `1` uur en bewaart het werkelijke bron-aantal apart als hoeveelheid.
+
+
+
+## Gedeelde tooling
+
+Voor de nieuwe volumiek-uitwisseling tussen webapp en SILT Suite run je ook:
+
+- `lab_tooling_bootstrap.sql`
+
+Dit bestand maakt het aparte schema `lab` aan en zet daar de gedeelde tooltabellen neer die door de webapp en de desktoptool samen worden gebruikt.
